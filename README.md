@@ -325,14 +325,12 @@ This project is licensed under the MIT License.
 
 ## 🚀 Production Deployment
 
-Ready to deploy to an external server?
-
-### ⚡ Quick Start
+### Quick Deployment
 
 ```bash
-# 1. Update environment variables
-# Edit: frontend/.env.production
-# Edit: admin-panel/.env.production
+# 1. Update environment variables with your production URLs
+# frontend/.env.production: VITE_API_URL=https://api.yourdomain.com
+# admin-panel/.env.production: VITE_API_URL=https://api.yourdomain.com
 
 # 2. Build everything
 bash deploy.sh
@@ -342,31 +340,35 @@ rsync -avz deployment/user-app/ user@server:/var/www/app/
 rsync -avz deployment/admin-app/ user@server:/var/www/admin/
 rsync -avz deployment/backend/ user@server:/var/www/api/
 
-# 4. On server - Start backend
+# 4. On server - Setup backend
 cd /var/www/api
 npm install --production
+cp .env.example .env  # Edit with your values
+npm install -g pm2
 pm2 start ecosystem.config.js
 pm2 save
-```
+node create-admin.js  # Create admin user
 
-### 📚 Documentation
-- **START_HERE.md** - Quick deployment guide
-- **PRODUCTION_DEPLOYMENT_GUIDE.md** - Detailed instructions with Nginx, SSL, security
+# 5. Configure Nginx and SSL (Let's Encrypt)
+```
 
 ### 🌐 Production URLs
 - User App: `https://app.yourdomain.com`
 - Admin App: `https://admin.yourdomain.com`
 - Backend API: `https://api.yourdomain.com`
 
+### 🔒 Security
+- Copy `.env.example` to `.env` and update values
+- Change JWT_SECRET to a strong random string
+- Change default admin password
+- Enable HTTPS/SSL
+- Configure firewall
+
 ---
 
 ## 🆘 Support
 
-For issues or questions:
-1. Check `START_HERE.md` for quick deployment
-2. See `PRODUCTION_DEPLOYMENT_GUIDE.md` for detailed instructions
-3. Review the code documentation
-4. Open an issue on GitHub
+For issues or questions, open an issue on GitHub.
 
 ## 🎉 Acknowledgments
 
