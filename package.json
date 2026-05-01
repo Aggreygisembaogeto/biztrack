@@ -1,0 +1,25 @@
+{
+  "name": "business-dashboard",
+  "version": "1.0.0",
+  "description": "Full-stack real-time business operations dashboard for small businesses in Nairobi, Kenya",
+  "scripts": {
+    "install-all": "cd backend && npm install && cd ../frontend && npm install",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build"
+  },
+  "keywords": [
+    "dashboard",
+    "business",
+    "real-time",
+    "nairobi",
+    "kenya",
+    "mpesa"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
