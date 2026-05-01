@@ -17,11 +17,8 @@ const Sidebar = ({ user }) => {
   const settings = SettingsStorage.load();
   const businessLogo = settings.businessLogo;
 
-  // Check if user is super admin (only admin@biztrack.com or users with admin role)
-  const isSuperAdmin = user && (
-    user.email === 'admin@biztrack.com' || 
-    user.role === 'admin'
-  );
+  // Check if user is admin - STRICT CHECK
+  const isAdmin = user && user.role === 'admin';
 
   // Base menu items (Admin Panel removed - it's now separate)
   const menuItems = [
@@ -105,8 +102,8 @@ const Sidebar = ({ user }) => {
           })}
         </ul>
 
-        {/* Admin Panel Link (if admin) */}
-        {isSuperAdmin && (
+        {/* Admin Panel Link - ONLY for users with role='admin' */}
+        {isAdmin && (
           <div className="mt-4 pt-4 border-t border-gray-700">
             <button
               onClick={() => handleNav('/admin')}

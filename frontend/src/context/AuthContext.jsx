@@ -1,12 +1,12 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === null) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
@@ -18,18 +18,26 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('biztrack_token');
-    const savedUser = localStorage.getItem('biztrack_user');
-
-    if (savedToken && savedUser) {
+    const initAuth = () => {
       try {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
+        const savedToken = localStorage.getItem('biztrack_token');
+        const savedUser = localStorage.getItem('biztrack_user');
+
+        if (savedToken && savedUser) {
+          const parsedUser = JSON.parse(savedUser);
+          setToken(savedToken);
+          setUser(parsedUser);
+        }
       } catch (error) {
-        localStorage.clear();
+        console.error('Error loading auth:', error);
+        localStorage.removeItem('biztrack_token');
+        localStorage.removeItem('biztrack_user');
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const login = async (email, password) => {
@@ -56,7 +64,8 @@ export const AuthProvider = ({ children }) => {
       toast.error(response.data.message || 'Login failed');
       return { success: false };
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
+      console.error('Login error:', error);
+      const message = error.response?.data?.message || 'Login failed. Please check your credentials.';
       toast.error(message);
       return { success: false };
     }
@@ -89,6 +98,7 @@ export const AuthProvider = ({ children }) => {
       toast.error(response.data.message || 'Registration failed');
       return { success: false };
     } catch (error) {
+      console.error('Registration error:', error);
       const message = error.response?.data?.message || 'Registration failed';
       toast.error(message);
       return { success: false };
@@ -103,22 +113,32 @@ export const AuthProvider = ({ children }) => {
     toast.info('Logged out successfully');
   };
 
+  const loginAsDemo = async () => {
+    // Demo login - just use regular login with demo credentials
+    return await login('demo@biztrack.com', 'demo123');
+  };
+
   const value = {
     user,
     token,
     loading,
     login,
     register,
-    logout
+    logout,
+    loginAsDemo
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <div className="text-white text-lg">Loading...</div>
       </div>
     );
   }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

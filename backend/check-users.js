@@ -3,10 +3,10 @@ const { query } = require('./config/database-production');
 async function checkUsers() {
   try {
     console.log('Checking users in database...');
-    const users = await query('SELECT id, email, business_name FROM users');
+    const users = await query('SELECT id, email, business_name, role FROM users');
     console.log(`Found ${users.length} users:`);
     users.forEach(user => {
-      console.log(`- ID: ${user.id}, Email: ${user.email}, Business: ${user.business_name}`);
+      console.log(`- ID: ${user.id}, Email: ${user.email}, Business: ${user.business_name}, Role: ${user.role || 'user'}`);
     });
     
     if (users.length === 0) {
