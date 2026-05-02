@@ -8,14 +8,16 @@ const COLORS = [
 ];
 
 const CustomTooltip = ({ active, payload }) => {
-  if (active && payload && payload.length) {
+  if (active && payload && payload.length > 0 && payload[0]) {
     const d = payload[0].payload;
+    if (!d) return null;
+    
     return (
       <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 text-sm shadow-xl">
-        <p className="text-white font-bold mb-1">{d.item}</p>
-        <p className="text-green-400">Revenue: KES {d.revenue.toLocaleString()}</p>
-        <p className="text-gray-400">Units sold: {d.qty}</p>
-        <p className="text-gray-400">Transactions: {d.count}</p>
+        <p className="text-white font-bold mb-1">{d.item || 'Unknown'}</p>
+        <p className="text-green-400">Revenue: KES {(d.revenue || 0).toLocaleString()}</p>
+        <p className="text-gray-400">Units sold: {d.qty || 0}</p>
+        <p className="text-gray-400">Transactions: {d.count || 0}</p>
       </div>
     );
   }

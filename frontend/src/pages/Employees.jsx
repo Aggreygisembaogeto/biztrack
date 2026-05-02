@@ -7,20 +7,12 @@ import { toast } from 'react-toastify';
 const roles = ['Manager', 'Cashier', 'Chef', 'Waiter', 'Cleaner', 'Security', 'Driver', 'Other'];
 const shifts = ['Morning (6am-2pm)', 'Afternoon (2pm-10pm)', 'Night (10pm-6am)', 'Full Day'];
 
-const initialEmployees = [
-  { id: 1, name: 'Alice Njeri', role: 'Manager', phone: '254711000001', salary: 45000, shift: 'Full Day', status: 'active', startDate: '2024-01-15', attendance: 96 },
-  { id: 2, name: 'Brian Otieno', role: 'Chef', phone: '254711000002', salary: 32000, shift: 'Morning (6am-2pm)', status: 'active', startDate: '2024-03-01', attendance: 92 },
-  { id: 3, name: 'Carol Wambui', role: 'Cashier', phone: '254711000003', salary: 22000, shift: 'Afternoon (2pm-10pm)', status: 'active', startDate: '2024-06-10', attendance: 98 },
-  { id: 4, name: 'Dennis Mwangi', role: 'Waiter', phone: '254711000004', salary: 18000, shift: 'Morning (6am-2pm)', status: 'active', startDate: '2025-01-05', attendance: 88 },
-  { id: 5, name: 'Esther Chebet', role: 'Waiter', phone: '254711000005', salary: 18000, shift: 'Afternoon (2pm-10pm)', status: 'on_leave', startDate: '2025-02-20', attendance: 85 },
-  { id: 6, name: 'Frank Kimani', role: 'Security', phone: '254711000006', salary: 20000, shift: 'Night (10pm-6am)', status: 'active', startDate: '2024-09-01', attendance: 94 },
-];
-
 const emptyForm = { name: '', role: 'Cashier', phone: '', salary: '', shift: 'Morning (6am-2pm)' };
 
 const Employees = () => {
   const { user } = useAuth();
-  const [employees, setEmployees] = useState(initialEmployees);
+  // No demo data - empty array for clean start
+  const [employees, setEmployees] = useState([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
@@ -175,7 +167,11 @@ const Employees = () => {
               </tbody>
             </table>
             {filtered.length === 0 && (
-              <div className="text-center py-12 text-gray-500">No employees found</div>
+              <div className="text-center py-12">
+                <FiUsers className="mx-auto text-gray-600 mb-3" size={48} />
+                <p className="text-gray-400 mb-2">No employees found</p>
+                <p className="text-gray-500 text-sm">Add your first employee to get started</p>
+              </div>
             )}
           </div>
         </div>

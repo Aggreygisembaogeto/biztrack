@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
 import { FiDownload, FiFileText, FiDollarSign, FiPackage, FiUsers, FiTrendingUp, FiCalendar } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { SalesStorage, ExpensesStorage, InventoryStorage, TransactionsStorage } from '../utils/storage';
+import { salesAPI, transactionsAPI, inventoryAPI } from '../utils/api';
 import { 
   exportSalesReport, 
   exportExpensesReport, 
@@ -15,40 +15,71 @@ import {
   generateInventoryPDF
 } from '../utils/exportUtils';
 
-const summaryData = [
-  { label: 'Total Revenue', value: 'KES 450,000', sub: 'This month', color: 'text-green-400', bg: 'bg-green-500/10', icon: <FiDollarSign /> },
-  { label: 'Total Expenses', value: 'KES 162,000', sub: 'This month', color: 'text-red-400', bg: 'bg-red-500/10', icon: <FiTrendingUp /> },
-  { label: 'Net Profit', value: 'KES 288,000', sub: '64% margin', color: 'text-blue-400', bg: 'bg-blue-500/10', icon: <FiDollarSign /> },
-  { label: 'Total Customers', value: '310', sub: '+47 this month', color: 'text-orange-400', bg: 'bg-orange-500/10', icon: <FiUsers /> },
-];
-
-const weeklyChart = [
-  { week: 'Week 1', revenue: 95000, expenses: 34000 },
-  { week: 'Week 2', revenue: 112000, expenses: 41000 },
-  { week: 'Week 3', revenue: 108000, expenses: 38000 },
-  { week: 'Week 4', revenue: 135000, expenses: 49000 },
-];
-
-const reportTypes = [
-  { id: 'sales', label: 'Sales Report', desc: 'All sales transactions with item breakdown', icon: <FiDollarSign />, color: 'text-green-400', bg: 'bg-green-500/10' },
-  { id: 'expenses', label: 'Expense Report', desc: 'All expenses categorized by type', icon: <FiTrendingUp />, color: 'text-red-400', bg: 'bg-red-500/10' },
-  { id: 'inventory', label: 'Inventory Report', desc: 'Stock levels, value and movement', icon: <FiPackage />, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-  { id: 'customers', label: 'Customer Report', desc: 'Customer activity and spending', icon: <FiUsers />, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-  { id: 'profit', label: 'Profit & Loss', desc: 'Full P&L statement for the period', icon: <FiFileText />, color: 'text-orange-400', bg: 'bg-orange-500/10' },
-  { id: 'payroll', label: 'Payroll Report', desc: 'Employee salaries and attendance', icon: <FiUsers />, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
-];
-
 const Reports = () => {
   const { user } = useAuth();
   const [period, setPeriod] = useState('month');
   const [dateFrom, setDateFrom] = useState('2026-04-01');
   const [dateTo, setDateTo] = useState('2026-04-29');
+  const [loading, setLoading] = useState(true);
 
-  // Load data from storage
-  const sales = SalesStorage.load();
-  const expenses = ExpensesStorage.load();
-  const inventory = InventoryStorage.load();
-  const transactions = TransactionsStorage.load();
+  // Load data from API
+  const [sales, setSales] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [salesRes, expensesRes, inventoryRes, transactionsRes] = await Promise.all([
+          salesAPI.getAll(),
+          transactionsAPI.getAll({ type: 'expense' }),
+          inventoryAPI.getAll(),
+          transactionsAPI.getAll()
+        ]);
+        
+        setSales(salesRes.data || []);
+        setExpenses(expensesRes.data || []);
+        setInventory(inventoryRes.data || []);
+        setTransactions(transactionsRes.data || []);
+      } catch (error) {
+        console.error('Error fetching reports data:', error);
+        toast.error('Failed to load reports data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Calculate summary from actual data
+  const totalRevenue = sales.reduce((sum, s) => sum + (s.amount || 0), 0);
+  const totalExpenses = expenses.reduce((sum, e) => sum + Math.abs(e.amount || 0), 0);
+  const netProfit = totalRevenue - totalExpenses;
+  const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0;
+  const totalCustomers = new Set(sales.map(s => s.customer_phone).filter(Boolean)).size;
+
+  const summaryData = [
+    { label: 'Total Revenue', value: `KES ${totalRevenue.toLocaleString()}`, sub: 'This month', color: 'text-green-400', bg: 'bg-green-500/10', icon: <FiDollarSign /> },
+    { label: 'Total Expenses', value: `KES ${totalExpenses.toLocaleString()}`, sub: 'This month', color: 'text-red-400', bg: 'bg-red-500/10', icon: <FiTrendingUp /> },
+    { label: 'Net Profit', value: `KES ${netProfit.toLocaleString()}`, sub: `${profitMargin}% margin`, color: 'text-blue-400', bg: 'bg-blue-500/10', icon: <FiDollarSign /> },
+    { label: 'Total Customers', value: totalCustomers, sub: 'Unique customers', color: 'text-orange-400', bg: 'bg-orange-500/10', icon: <FiUsers /> },
+  ];
+
+  // No demo chart data - will be empty until user has data
+  const weeklyChart = [];
+
+  const reportTypes = [
+    { id: 'sales', label: 'Sales Report', desc: 'All sales transactions with item breakdown', icon: <FiDollarSign />, color: 'text-green-400', bg: 'bg-green-500/10' },
+    { id: 'expenses', label: 'Expense Report', desc: 'All expenses categorized by type', icon: <FiTrendingUp />, color: 'text-red-400', bg: 'bg-red-500/10' },
+    { id: 'inventory', label: 'Inventory Report', desc: 'Stock levels, value and movement', icon: <FiPackage />, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { id: 'customers', label: 'Customer Report', desc: 'Customer activity and spending', icon: <FiUsers />, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { id: 'profit', label: 'Profit & Loss', desc: 'Full P&L statement for the period', icon: <FiFileText />, color: 'text-orange-400', bg: 'bg-orange-500/10' },
+    { id: 'payroll', label: 'Payroll Report', desc: 'Employee salaries and attendance', icon: <FiUsers />, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+  ];
 
   const handleDownload = (reportId, format = 'pdf') => {
     try {
@@ -108,6 +139,16 @@ const Reports = () => {
       <Sidebar user={user} />
       <div className="flex-1 pt-16 md:pt-0 p-4 md:p-8 overflow-auto">
 
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-gray-400">Loading reports data...</p>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -159,22 +200,29 @@ const Reports = () => {
         </div>
 
         {/* Weekly Chart */}
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 md:p-6 mb-6">
-          <h3 className="text-white font-bold text-lg mb-4">Weekly Revenue vs Expenses</h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={weeklyChart}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="week" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" tickFormatter={v => `${v / 1000}k`} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
-                formatter={v => [`KES ${v.toLocaleString()}`, '']}
-              />
-              <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} name="Revenue" />
-              <Bar dataKey="expenses" fill="#ef4444" radius={[4, 4, 0, 0]} name="Expenses" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {weeklyChart.length > 0 ? (
+          <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 md:p-6 mb-6">
+            <h3 className="text-white font-bold text-lg mb-4">Weekly Revenue vs Expenses</h3>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={weeklyChart}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="week" stroke="#9ca3af" />
+                <YAxis stroke="#9ca3af" tickFormatter={v => `${v / 1000}k`} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                  formatter={v => [`KES ${v.toLocaleString()}`, '']}
+                />
+                <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} name="Revenue" />
+                <Bar dataKey="expenses" fill="#ef4444" radius={[4, 4, 0, 0]} name="Expenses" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6 text-center">
+            <FiFileText className="mx-auto text-gray-600 mb-3" size={40} />
+            <p className="text-gray-400">No data available yet. Start recording sales and expenses to see charts.</p>
+          </div>
+        )}
 
         {/* Report Types */}
         <h3 className="text-white font-bold text-lg mb-4">Available Reports</h3>
@@ -202,6 +250,8 @@ const Reports = () => {
           ))}
         </div>
 
+          </>
+        )}
       </div>
     </div>
   );

@@ -23,13 +23,17 @@ const Settings = () => {
     const settings = SettingsStorage.load();
     return settings.businessLogo || '';
   });
-  const [profileData, setProfileData] = useState({
-    business_name: user.business_name,
-    email: user.email,
-    phone: user.phone || '',
-    location: user.location || '',
-    currency: 'KES',
-    timezone: 'Africa/Nairobi'
+  
+  const [profileData, setProfileData] = useState(() => {
+    const settings = SettingsStorage.load();
+    return {
+      business_name: settings.business_name || user.business_name,
+      email: settings.email || user.email,
+      phone: settings.phone || user.phone || '',
+      location: settings.location || user.location || '',
+      currency: settings.currency || 'KES',
+      timezone: settings.timezone || 'Africa/Nairobi'
+    };
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -38,12 +42,15 @@ const Settings = () => {
     confirmPassword: ''
   });
 
-  const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    smsNotifications: false,
-    transactionAlerts: true,
-    dailySummary: true,
-    lowStockAlerts: false
+  const [notifications, setNotifications] = useState(() => {
+    const settings = SettingsStorage.load();
+    return settings.notifications || {
+      emailNotifications: true,
+      smsNotifications: false,
+      transactionAlerts: true,
+      dailySummary: true,
+      lowStockAlerts: false
+    };
   });
 
   const handleProfileChange = (e) => {
@@ -69,7 +76,27 @@ const Settings = () => {
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
-    toast.success('Profile updated successfully.');
+    try {
+      // Save to localStorage
+      SettingsStorage.update({
+        business_name: profileData.business_name,
+        email: profileData.email,
+        phone: profileData.phone,
+        location: profileData.location,
+        currency: profileData.currency,
+        timezone: profileData.timezone
+      });
+      
+      toast.success('Profile updated successfully!');
+      
+      // Reload page to reflect changes
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error('Failed to save profile');
+    }
   };
 
   const handleSavePassword = (e) => {
@@ -83,7 +110,17 @@ const Settings = () => {
   };
 
   const handleSaveNotifications = () => {
-    toast.success('Notification preferences saved.');
+    try {
+      // Save to localStorage
+      SettingsStorage.update({
+        notifications: notifications
+      });
+      
+      toast.success('Notification preferences saved!');
+    } catch (error) {
+      console.error('Error saving notifications:', error);
+      toast.error('Failed to save preferences');
+    }
   };
 
   const handleLogoUpload = (e) => {

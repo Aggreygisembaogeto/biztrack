@@ -1,24 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
-import { FiShoppingBag, FiMessageSquare, FiPhone, FiMail, FiInstagram, FiPackage, FiCheck, FiX, FiClock, FiPlus, FiFilter } from 'react-icons/fi';
+import { FiShoppingBag, FiPhone, FiMail, FiInstagram, FiPackage, FiCheck, FiX, FiClock, FiPlus, FiFilter } from 'react-icons/fi';
 import { FaWhatsapp, FaFacebook, FaTiktok } from 'react-icons/fa';
+import { ordersAPI } from '../utils/api';
 
 const Orders = () => {
   const { user } = useAuth();
-  const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem('orders');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showAddOrder, setShowAddOrder] = useState(false);
   const [filterPlatform, setFilterPlatform] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // Save orders to localStorage whenever they change
+  // Fetch orders from API
   useEffect(() => {
-    localStorage.setItem('orders', JSON.stringify(orders));
-  }, [orders]);
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await ordersAPI.getAll();
+      setOrders(response.data || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast.error('Failed to load orders');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const platforms = [
     { id: 'whatsapp', name: 'WhatsApp', icon: <FaWhatsapp />, color: 'text-green-500', bg: 'bg-green-500/10' },
@@ -49,46 +61,67 @@ const Orders = () => {
     status: 'pending'
   });
 
-  const handleAddOrder = (e) => {
+  const handleAddOrder = async (e) => {
     e.preventDefault();
     
-    const order = {
-      id: Date.now(),
-      ...newOrder,
-      total_amount: parseFloat(newOrder.total_amount),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    try {
+      const orderData = {
+        ...newOrder,
+        total_amount: parseFloat(newOrder.total_amount)
+      };
 
-    setOrders([order, ...orders]);
-    toast.success(`Order from ${newOrder.customer_name} added successfully!`);
-    
-    // Reset form
-    setNewOrder({
-      customer_name: '',
-      customer_phone: '',
-      platform: 'whatsapp',
-      items: '',
-      total_amount: '',
-      notes: '',
-      status: 'pending'
-    });
-    setShowAddOrder(false);
+      await ordersAPI.create(orderData);
+      toast.success(`Order from ${newOrder.customer_name} added successfully!`);
+      
+      // Reset form
+      setNewOrder({
+        customer_name: '',
+        customer_phone: '',
+        platform: 'whatsapp',
+        items: '',
+        total_amount: '',
+        notes: '',
+        status: 'pending'
+      });
+      setShowAddOrder(false);
+      
+      // Refresh orders
+      fetchOrders();
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast.error('Failed to create order: ' + error.message);
+    }
   };
 
-  const handleUpdateStatus = (orderId, newStatus) => {
-    setOrders(orders.map(order => 
-      order.id === orderId 
-        ? { ...order, status: newStatus, updated_at: new Date().toISOString() }
-        : order
-    ));
-    toast.success('Order status updated!');
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      await ordersAPI.updateStatus(orderId, newStatus);
+      toast.success('Order status updated!');
+      
+      // Update local state
+      setOrders(orders.map(order => 
+        order.id === orderId 
+          ? { ...order, status: newStatus, updated_at: new Date().toISOString() }
+          : order
+      ));
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      toast.error('Failed to update order status');
+    }
   };
 
-  const handleDeleteOrder = (orderId) => {
+  const handleDeleteOrder = async (orderId) => {
     if (window.confirm('Are you sure you want to delete this order?')) {
-      setOrders(orders.filter(order => order.id !== orderId));
-      toast.success('Order deleted!');
+      try {
+        await ordersAPI.delete(orderId);
+        toast.success('Order deleted!');
+        
+        // Update local state
+        setOrders(orders.filter(order => order.id !== orderId));
+      } catch (error) {
+        console.error('Error deleting order:', error);
+        toast.error('Failed to delete order');
+      }
     }
   };
 
@@ -127,8 +160,18 @@ const Orders = () => {
   };
 
   const openWhatsApp = (phone, orderDetails) => {
+    // Handle both string and array formats
+    let itemsText = '';
+    if (typeof orderDetails === 'string') {
+      itemsText = orderDetails;
+    } else if (Array.isArray(orderDetails)) {
+      itemsText = orderDetails.map(item => `${item.quantity || ''}x ${item.name || ''}`).join(', ');
+    } else {
+      itemsText = 'Order details';
+    }
+    
     const message = encodeURIComponent(
-      `Hello! Your order has been received:\n\n${orderDetails}\n\nWe'll notify you when it's ready. Thank you!`
+      `Hello! Your order has been received:\n\n${itemsText}\n\nWe'll notify you when it's ready. Thank you!`
     );
     const cleanPhone = phone.replace(/\+/g, '');
     window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
@@ -139,23 +182,33 @@ const Orders = () => {
       <Sidebar user={user} />
 
       <div className="flex-1 pt-16 md:pt-0 p-4 md:p-8 overflow-auto">
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Orders Management</h1>
-            <p className="text-gray-400 text-sm">Track orders from WhatsApp, Facebook, Instagram, and more</p>
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-gray-400">Loading orders...</p>
+            </div>
           </div>
-          <button
-            onClick={() => setShowAddOrder(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-all shadow-lg"
-          >
-            <FiPlus />
-            Add Order
-          </button>
-        </div>
+        ) : (
+          <>
+            {/* Header */}
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Orders Management</h1>
+                <p className="text-gray-400 text-sm">Track orders from WhatsApp, Facebook, Instagram, and more</p>
+              </div>
+              <button
+                onClick={() => setShowAddOrder(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-all shadow-lg"
+              >
+                <FiPlus />
+                Add Order
+              </button>
+            </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-400 text-sm">Total Orders</span>
@@ -187,10 +240,10 @@ const Orders = () => {
             </div>
             <p className="text-3xl font-bold text-white">KES {stats.revenue.toLocaleString()}</p>
           </div>
-        </div>
+            </div>
 
-        {/* Filters */}
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 mb-6">
+            {/* Filters */}
+            <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 mb-6">
           <div className="flex items-center gap-2 mb-3">
             <FiFilter className="text-gray-400" />
             <span className="text-white font-medium">Filters</span>
@@ -224,102 +277,111 @@ const Orders = () => {
               </select>
             </div>
           </div>
-        </div>
+            </div>
 
-        {/* Orders List */}
-        <div className="bg-gray-800 rounded-xl border border-gray-700">
-          <div className="p-6 border-b border-gray-700">
-            <h2 className="text-xl font-bold text-white">Orders ({filteredOrders.length})</h2>
-          </div>
-
-          <div className="p-6">
-            {filteredOrders.length === 0 ? (
-              <div className="text-center py-12">
-                <FiShoppingBag className="mx-auto text-gray-600 mb-4" size={48} />
-                <p className="text-gray-400 mb-4">No orders found</p>
-                <button
-                  onClick={() => setShowAddOrder(true)}
-                  className="text-orange-500 hover:text-orange-400"
-                >
-                  Add your first order
-                </button>
+            {/* Orders List */}
+            <div className="bg-gray-800 rounded-xl border border-gray-700">
+              <div className="p-6 border-b border-gray-700">
+                <h2 className="text-xl font-bold text-white">Orders ({filteredOrders.length})</h2>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredOrders.map((order) => {
-                  const platform = getPlatformInfo(order.platform);
-                  const status = getStatusInfo(order.status);
 
-                  return (
-                    <div
-                      key={order.id}
-                      className="bg-gray-700/50 rounded-lg p-4 hover:bg-gray-700 transition-colors"
+              <div className="p-6">
+                {filteredOrders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FiShoppingBag className="mx-auto text-gray-600 mb-4" size={48} />
+                    <p className="text-gray-400 mb-4">No orders found</p>
+                    <button
+                      onClick={() => setShowAddOrder(true)}
+                      className="text-orange-500 hover:text-orange-400"
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-start gap-3 flex-1">
-                          <div className={`p-2 rounded-lg ${platform.bg}`}>
-                            <span className={`${platform.color} text-xl`}>{platform.icon}</span>
-                          </div>
-                          
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="text-white font-bold">{order.customer_name}</h3>
-                              <span className={`px-2 py-1 rounded text-xs font-medium ${status.bg} ${status.color}`}>
-                                {status.name}
-                              </span>
+                      Add your first order
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredOrders.map((order) => {
+                      const platform = getPlatformInfo(order.platform);
+                      const status = getStatusInfo(order.status);
+
+                      return (
+                        <div
+                          key={order.id}
+                          className="bg-gray-700/50 rounded-lg p-4 hover:bg-gray-700 transition-colors"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-start gap-3 flex-1">
+                              <div className={`p-2 rounded-lg ${platform.bg}`}>
+                                <span className={`${platform.color} text-xl`}>{platform.icon}</span>
+                              </div>
+                              
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="text-white font-bold">{order.customer_name}</h3>
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${status.bg} ${status.color}`}>
+                                    {status.name}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-400 mb-1">{order.customer_phone}</p>
+                                <p className="text-sm text-gray-300 mb-2">
+                                  {typeof order.items === 'string' 
+                                    ? order.items 
+                                    : Array.isArray(order.items)
+                                      ? order.items.map(item => `${item.quantity || ''}x ${item.name || ''}`).join(', ')
+                                      : 'No items'
+                                  }
+                                </p>
+                                {order.notes && (
+                                  <p className="text-xs text-gray-500 italic">Note: {order.notes}</p>
+                                )}
+                              </div>
                             </div>
-                            <p className="text-sm text-gray-400 mb-1">{order.customer_phone}</p>
-                            <p className="text-sm text-gray-300 mb-2">{order.items}</p>
-                            {order.notes && (
-                              <p className="text-xs text-gray-500 italic">Note: {order.notes}</p>
+
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-white mb-1">
+                                KES {order.total_amount.toLocaleString()}
+                              </p>
+                              <p className="text-xs text-gray-400">{formatDate(order.created_at)}</p>
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <select
+                              value={order.status}
+                              onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
+                              className="px-3 py-1 bg-gray-600 border border-gray-500 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            >
+                              {statusOptions.map(status => (
+                                <option key={status.id} value={status.id}>{status.name}</option>
+                              ))}
+                            </select>
+
+                            {order.platform === 'whatsapp' && (
+                              <button
+                                onClick={() => openWhatsApp(order.customer_phone, order.items)}
+                                className="px-3 py-1 bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded text-sm transition-colors border border-green-500/30"
+                              >
+                                <FaWhatsapp className="inline mr-1" />
+                                Message
+                              </button>
                             )}
+
+                            <button
+                              onClick={() => handleDeleteOrder(order.id)}
+                              className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded text-sm transition-colors border border-red-500/30"
+                            >
+                              Delete
+                            </button>
                           </div>
                         </div>
-
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-white mb-1">
-                            KES {order.total_amount.toLocaleString()}
-                          </p>
-                          <p className="text-xs text-gray-400">{formatDate(order.created_at)}</p>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <select
-                          value={order.status}
-                          onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
-                          className="px-3 py-1 bg-gray-600 border border-gray-500 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        >
-                          {statusOptions.map(status => (
-                            <option key={status.id} value={status.id}>{status.name}</option>
-                          ))}
-                        </select>
-
-                        {order.platform === 'whatsapp' && (
-                          <button
-                            onClick={() => openWhatsApp(order.customer_phone, order.items)}
-                            className="px-3 py-1 bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded text-sm transition-colors border border-green-500/30"
-                          >
-                            <FaWhatsapp className="inline mr-1" />
-                            Message
-                          </button>
-                        )}
-
-                        <button
-                          onClick={() => handleDeleteOrder(order.id)}
-                          className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded text-sm transition-colors border border-red-500/30"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Add Order Modal */}

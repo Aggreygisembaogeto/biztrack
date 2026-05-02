@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear BizTrack LocalStorage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1f2937;
+            color: white;
+        }
+        button {
+            background: #f97316;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #ea580c;
+        }
+        .success {
+            background: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        .info {
+            background: #374151;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧹 Clear BizTrack LocalStorage</h1>
+    
+    <div class="info">
+        <h3>Current LocalStorage Data:</h3>
+        <pre id="current-data">Loading...</pre>
+    </div>
+
+    <button onclick="clearAllData()">Clear All BizTrack Data</button>
+    <button onclick="clearOnlySalesData()">Clear Only Sales/Expenses/Inventory</button>
+    <button onclick="location.reload()">Refresh</button>
+
+    <div class="success" id="success-message">
+        ✅ LocalStorage cleared successfully! Please refresh your BizTrack app.
+    </div>
+
+    <script>
+        function displayCurrentData() {
+            const keys = Object.keys(localStorage);
+            const biztrackKeys = keys.filter(k => 
+                k.includes('biztrack') || 
+                k.includes('sales') || 
+                k.includes('expenses') || 
+                k.includes('inventory') ||
+                k.includes('transactions') ||
+                k.includes('orders')
+            );
+            
+            const data = {};
+            biztrackKeys.forEach(key => {
+                try {
+                    const value = localStorage.getItem(key);
+                    data[key] = JSON.parse(value);
+                } catch {
+                    data[key] = localStorage.getItem(key);
+                }
+            });
+            
+            document.getElementById('current-data').textContent = 
+                JSON.stringify(data, null, 2) || 'No BizTrack data found';
+        }
+
+        function clearAllData() {
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.includes('biztrack') || 
+                    key.includes('sales') || 
+                    key.includes('expenses') || 
+                    key.includes('inventory') ||
+                    key.includes('transactions') ||
+                    key.includes('orders')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            document.getElementById('success-message').style.display = 'block';
+            setTimeout(() => {
+                displayCurrentData();
+            }, 500);
+        }
+
+        function clearOnlySalesData() {
+            localStorage.removeItem('sales');
+            localStorage.removeItem('expenses');
+            localStorage.removeItem('inventory');
+            localStorage.removeItem('transactions');
+            localStorage.removeItem('orders');
+            document.getElementById('success-message').style.display = 'block';
+            setTimeout(() => {
+                displayCurrentData();
+            }, 500);
+        }
+
+        // Display current data on load
+        displayCurrentData();
+    </script>
+</body>
+</html>

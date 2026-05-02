@@ -25,11 +25,18 @@ exports.getOrders = async (req, res) => {
 
     const orders = await query(sql, params);
 
-    // Parse items JSON for each order
-    const ordersWithParsedItems = orders.map(order => ({
-      ...order,
-      items: JSON.parse(order.items)
-    }));
+    // Parse items JSON for each order (handle both string and JSON)
+    const ordersWithParsedItems = orders.map(order => {
+      try {
+        return {
+          ...order,
+          items: JSON.parse(order.items)
+        };
+      } catch (e) {
+        // Keep as string if not valid JSON
+        return order;
+      }
+    });
 
     res.json({
       success: true,
@@ -63,8 +70,12 @@ exports.getOrder = async (req, res) => {
       });
     }
 
-    // Parse items JSON
-    order.items = JSON.parse(order.items);
+    // Try to parse items as JSON, fallback to string
+    try {
+      order.items = JSON.parse(order.items);
+    } catch (e) {
+      // Keep as string if not valid JSON
+    }
 
     res.json({
       success: true,
@@ -101,11 +112,16 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Validate items is an array
-    if (!Array.isArray(items) || items.length === 0) {
+    // Handle items - can be string or array
+    let itemsToStore;
+    if (typeof items === 'string') {
+      itemsToStore = items; // Store as-is if string
+    } else if (Array.isArray(items)) {
+      itemsToStore = JSON.stringify(items); // Convert array to JSON
+    } else {
       return res.status(400).json({
         success: false,
-        message: 'Items must be a non-empty array'
+        message: 'Items must be a string or array'
       });
     }
 
@@ -118,7 +134,7 @@ exports.createOrder = async (req, res) => {
         customer_name,
         customer_phone,
         platform,
-        JSON.stringify(items),
+        itemsToStore,
         total_amount,
         notes || null,
         status || 'pending'
@@ -130,8 +146,12 @@ exports.createOrder = async (req, res) => {
       [result.id]
     );
 
-    // Parse items JSON
-    newOrder.items = JSON.parse(newOrder.items);
+    // Try to parse items as JSON, fallback to string
+    try {
+      newOrder.items = JSON.parse(newOrder.items);
+    } catch (e) {
+      // Keep as string if not valid JSON
+    }
 
     res.status(201).json({
       success: true,
@@ -175,16 +195,19 @@ exports.updateOrder = async (req, res) => {
       });
     }
 
-    // Prepare items JSON if provided
-    let itemsJson = existingOrder.items;
-    if (items) {
-      if (!Array.isArray(items)) {
+    // Prepare items for storage if provided
+    let itemsToStore = existingOrder.items;
+    if (items !== undefined) {
+      if (typeof items === 'string') {
+        itemsToStore = items;
+      } else if (Array.isArray(items)) {
+        itemsToStore = JSON.stringify(items);
+      } else {
         return res.status(400).json({
           success: false,
-          message: 'Items must be an array'
+          message: 'Items must be a string or array'
         });
       }
-      itemsJson = JSON.stringify(items);
     }
 
     await run(
@@ -202,7 +225,7 @@ exports.updateOrder = async (req, res) => {
         customer_name !== undefined ? customer_name : existingOrder.customer_name,
         customer_phone !== undefined ? customer_phone : existingOrder.customer_phone,
         platform !== undefined ? platform : existingOrder.platform,
-        itemsJson,
+        itemsToStore,
         total_amount !== undefined ? total_amount : existingOrder.total_amount,
         notes !== undefined ? notes : existingOrder.notes,
         status !== undefined ? status : existingOrder.status,
@@ -216,8 +239,12 @@ exports.updateOrder = async (req, res) => {
       [orderId]
     );
 
-    // Parse items JSON
-    updatedOrder.items = JSON.parse(updatedOrder.items);
+    // Try to parse items as JSON, fallback to string
+    try {
+      updatedOrder.items = JSON.parse(updatedOrder.items);
+    } catch (e) {
+      // Keep as string if not valid JSON
+    }
 
     res.json({
       success: true,
@@ -317,11 +344,18 @@ exports.getOrderStats = async (req, res) => {
       [userId]
     );
 
-    // Parse items for recent orders
-    const recentOrdersParsed = recentOrders.map(order => ({
-      ...order,
-      items: JSON.parse(order.items)
-    }));
+    // Parse items for recent orders (handle both string and JSON)
+    const recentOrdersParsed = recentOrders.map(order => {
+      try {
+        return {
+          ...order,
+          items: JSON.parse(order.items)
+        };
+      } catch (e) {
+        // Keep as string if not valid JSON
+        return order;
+      }
+    });
 
     res.json({
       success: true,
@@ -387,8 +421,12 @@ exports.updateOrderStatus = async (req, res) => {
       [orderId]
     );
 
-    // Parse items JSON
-    updatedOrder.items = JSON.parse(updatedOrder.items);
+    // Try to parse items as JSON, fallback to string
+    try {
+      updatedOrder.items = JSON.parse(updatedOrder.items);
+    } catch (e) {
+      // Keep as string if not valid JSON
+    }
 
     res.json({
       success: true,
