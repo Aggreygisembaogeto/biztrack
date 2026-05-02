@@ -2,58 +2,47 @@
 
 A modern, full-featured business management system for small to medium businesses. Track sales, manage inventory, monitor expenses, and generate professional reports - all in one place.
 
-![BizTrack](image.png)
-
-## 🚀 Features
+## Features
 
 ### Core Features
-- **📊 Dashboard** - Real-time business metrics and analytics
-- **🛡️ Admin Panel** - Platform-wide management and monitoring (separate from business dashboard)
-- **📦 Orders Management** - Track orders from WhatsApp, Facebook, Instagram, TikTok, and more
-- **💰 Sales Tracking** - Record sales with automatic inventory deduction
-- **📦 Inventory Management** - Full CRUD operations with low stock alerts
-- **💸 Expense Tracking** - Monitor business expenses by category
-- **📈 Profit Analysis** - Track revenue, expenses, and net profit
-- **🧾 Receipt Generation** - Digital receipts via WhatsApp, SMS, or Email
-- **📑 Report Exports** - Download CSV and PDF reports
-- **🔍 Search & Filter** - Find transactions quickly
-- **💾 Data Persistence** - All data saved automatically (localStorage + SQLite)
+- **Dashboard** - Real-time business metrics and analytics
+- **Orders Management** - Track orders from WhatsApp, Facebook, Instagram, TikTok, and more
+- **Sales Tracking** - Record sales with automatic inventory deduction
+- **Inventory Management** - Full CRUD operations with low stock alerts
+- **Expense Tracking** - Monitor business expenses by category
+- **Profit Analysis** - Track revenue, expenses, and net profit
+- **Receipt Generation** - Digital receipts via WhatsApp, SMS, or Email
+- **Report Exports** - Download CSV and PDF reports
+- **Search & Filter** - Find transactions quickly
+- **Data Persistence** - All data saved securely in database
 
 ### Multi-Platform Order Management
-- **📱 WhatsApp Orders** - Direct messaging integration
-- **📘 Facebook Orders** - Social media order tracking
-- **📸 Instagram Orders** - Visual platform integration
-- **🎵 TikTok Orders** - Trending platform support
-- **☎️ Phone Orders** - Traditional call orders
-- **📧 Email Orders** - Business email orders
-- **🚶 Walk-in Orders** - In-store customer orders
-- **📊 Order Statistics** - Track performance by platform
-
-### Admin Features
-- **👥 User Management** - View, search, suspend, activate, delete users
-- **📊 Platform Analytics** - Monitor all businesses, revenue, orders
-- **🔍 Search & Filter** - Find users by email or business name
-- **📥 Data Export** - Export all user data for backup
-- **📈 Performance Metrics** - Top performers, revenue distribution
-- **🏥 System Health** - Monitor API, database, storage status
+- **WhatsApp Orders** - Direct messaging integration
+- **Facebook Orders** - Social media order tracking
+- **Instagram Orders** - Visual platform integration
+- **TikTok Orders** - Trending platform support
+- **Phone Orders** - Traditional call orders
+- **Email Orders** - Business email orders
+- **Walk-in Orders** - In-store customer orders
+- **Order Statistics** - Track performance by platform
 
 ### User Experience
-- **🌓 Dark/Light Mode** - Toggle between themes
-- **🖼️ Custom Logo** - Upload your business logo
-- **📱 PWA Support** - Install as a mobile/desktop app
-- **📊 Daily Summaries** - Yesterday's performance on login
-- **💾 Backup/Restore** - Export and import all data
-- **🏪 Multi-Location** - Support for multiple business locations
-- **🔐 Real Authentication** - Secure JWT-based authentication with bcrypt
+- **Dark/Light Mode** - Toggle between themes
+- **Custom Logo** - Upload your business logo
+- **PWA Support** - Install as a mobile/desktop app
+- **Daily Summaries** - Yesterday's performance on login
+- **Backup/Restore** - Export and import all data
+- **Multi-Location** - Support for multiple business locations
+- **Secure Authentication** - JWT-based authentication with bcrypt password hashing
 
 ### Smart Features
 - **Auto-Calculate** - Totals calculated automatically
 - **Unit Dropdown** - Easy unit selection (kg, liters, bags, etc.)
 - **Low Stock Warnings** - Get notified when inventory is low
-- **AI Assistant** - Get business insights and recommendations
-- **Real-time Updates** - See changes instantly
+- **AI Market Advisor** - Get business insights with Kenya market data
+- **Real-time Updates** - See changes instantly across all pages
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 - **React** - UI framework
@@ -64,15 +53,15 @@ A modern, full-featured business management system for small to medium businesse
 - **Recharts** - Charts and graphs
 - **React Toastify** - Notifications
 
-### Backend (Production)
+### Backend
 - **Node.js** - Runtime environment
 - **Express** - Web framework
-- **SQLite** - Production database
+- **SQLite** - Database (PostgreSQL-ready)
 - **JWT** - Token-based authentication
 - **bcrypt** - Secure password hashing
 - **dotenv** - Environment configuration
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 - Node.js (v14 or higher)
@@ -82,8 +71,8 @@ A modern, full-featured business management system for small to medium businesse
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd tech world
+   git clone https://github.com/Aggreygisembaogeto/biztrack.git
+   cd biztrack
    ```
 
 2. **Install dependencies**
@@ -106,9 +95,9 @@ A modern, full-featured business management system for small to medium businesse
 
 4. **Start the application**
    ```bash
-   # Terminal 1 - Start production backend
+   # Terminal 1 - Start backend
    cd backend
-   node server-production.js
+   npm start
 
    # Terminal 2 - Start frontend
    cd frontend
@@ -117,10 +106,9 @@ A modern, full-featured business management system for small to medium businesse
 
 5. **Access the application**
    - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
-   - Health Check: http://localhost:5000/api/health
+   - Backend API: http://localhost:5001
 
-## 🎯 Quick Start
+## Quick Start
 
 ### First Time Setup
 
@@ -138,8 +126,7 @@ A modern, full-featured business management system for small to medium businesse
    - Go to Dashboard
    - Click "Add Sale"
    - Select item, quantity, unit, and price
-   - Click "Add Sale"
-   - Inventory automatically updates!
+   - Inventory automatically updates
 
 4. **Generate a receipt**
    - After recording a sale
@@ -151,7 +138,7 @@ A modern, full-featured business management system for small to medium businesse
    - Choose report type (Sales, Inventory, Transactions)
    - Click "Download CSV" or "Download PDF"
 
-## 📖 Usage Guide
+## Usage Guide
 
 ### Recording a Sale
 
@@ -197,24 +184,6 @@ A modern, full-featured business management system for small to medium businesse
 3. Click **"Download CSV"** or **"Download PDF"**
 4. File downloads to your computer
 
-### Using Admin Panel
-
-1. Click **"Admin Panel"** in sidebar (red, with ADMIN badge)
-2. View **Platform Overview**:
-   - Total businesses, active users
-   - Platform revenue, total orders
-   - New users today, active today
-3. Manage **Users**:
-   - Search by email or business name
-   - Filter by status (Active/Suspended)
-   - Suspend, activate, or delete users
-   - Export user data
-4. View **Analytics**:
-   - Top revenue generators
-   - Most active businesses
-   - System health status
-5. Click **"Back to My Dashboard"** to return to your business
-
 ### Customizing Settings
 
 1. Go to **Settings** page
@@ -223,7 +192,7 @@ A modern, full-featured business management system for small to medium businesse
 4. **Backup Data**: Click "Export Data" to download JSON
 5. **Restore Data**: Click "Import Data" to restore from JSON
 
-## 🎨 Features in Detail
+## Features in Detail
 
 ### Unit Dropdown
 When recording sales, select from 10 unit types:
@@ -270,17 +239,17 @@ Receipts include:
 ### Data Persistence
 
 **Frontend (localStorage)**:
-- Sales transactions
-- Inventory items
-- Expenses
-- Business settings
 - Theme preference
 - Custom logo
+- User preferences
 
 **Backend (SQLite Database)**:
 - User accounts (encrypted passwords)
 - Authentication tokens
 - Business profiles
+- Sales transactions
+- Inventory items
+- Expenses
 - Transaction history
 - Order records
 
@@ -290,18 +259,20 @@ Data survives:
 - Computer restart
 - Server restart
 
-## 🔒 Security
+## Security
 
-- **Password Hashing**: bcrypt with salt rounds
-- **JWT Authentication**: Secure token-based auth (30-day expiry)
-- **Protected Routes**: Frontend and backend route protection
-- **Input Validation**: Email, password, and data validation
-- **SQL Injection Prevention**: Parameterized queries
-- **CORS Configuration**: Controlled cross-origin requests
-- **Error Handling**: Comprehensive error management
-- **Environment Variables**: Sensitive data in .env files
+- **Password Hashing**: bcrypt with salt rounds (10 rounds)
+- **JWT Authentication**: Secure token-based auth with 30-day expiry
+- **Protected Routes**: Frontend and backend route protection with middleware
+- **Input Validation**: Email format, password strength, and data validation
+- **SQL Injection Prevention**: Parameterized queries throughout
+- **CORS Configuration**: Controlled cross-origin requests (configurable origins)
+- **Error Handling**: Comprehensive error management without sensitive data exposure
+- **Environment Variables**: All sensitive data stored in .env files (never committed)
+- **Rate Limiting**: Protection against brute force attacks
+- **Secure Headers**: HTTP security headers configured
 
-## 📱 PWA Support
+## PWA Support
 
 Install BizTrack as an app:
 1. Build for production: `npm run build`
@@ -310,7 +281,7 @@ Install BizTrack as an app:
 4. Click to install
 5. Use like a native app!
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please:
 1. Fork the repository
@@ -319,58 +290,57 @@ Contributions are welcome! Please:
 4. Test thoroughly
 5. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
-## 🚀 Production Deployment
+## Production Deployment
 
 ### Quick Deployment
 
 ```bash
 # 1. Update environment variables with your production URLs
 # frontend/.env.production: VITE_API_URL=https://api.yourdomain.com
-# admin-panel/.env.production: VITE_API_URL=https://api.yourdomain.com
 
-# 2. Build everything
-bash deploy.sh
+# 2. Build frontend
+cd frontend
+npm run build
 
 # 3. Upload to server
-rsync -avz deployment/user-app/ user@server:/var/www/app/
-rsync -avz deployment/admin-app/ user@server:/var/www/admin/
-rsync -avz deployment/backend/ user@server:/var/www/api/
+rsync -avz dist/ user@server:/var/www/app/
+rsync -avz backend/ user@server:/var/www/api/
 
 # 4. On server - Setup backend
 cd /var/www/api
 npm install --production
 cp .env.example .env  # Edit with your values
 npm install -g pm2
-pm2 start ecosystem.config.js
+pm2 start server.js --name biztrack-api
 pm2 save
-node create-admin.js  # Create admin user
 
 # 5. Configure Nginx and SSL (Let's Encrypt)
 ```
 
-### 🌐 Production URLs
+### Production URLs
 - User App: `https://app.yourdomain.com`
-- Admin App: `https://admin.yourdomain.com`
 - Backend API: `https://api.yourdomain.com`
 
-### 🔒 Security
-- Copy `.env.example` to `.env` and update values
-- Change JWT_SECRET to a strong random string
-- Change default admin password
-- Enable HTTPS/SSL
-- Configure firewall
+### Security Checklist
+- Copy `.env.example` to `.env` and update all values
+- Change JWT_SECRET to a strong random string (minimum 32 characters)
+- Use strong passwords for all accounts
+- Enable HTTPS/SSL with valid certificates
+- Configure firewall to allow only necessary ports
+- Set up regular database backups
+- Keep dependencies updated
 
 ---
 
-## 🆘 Support
+## Support
 
 For issues or questions, open an issue on GitHub.
 
-## 🎉 Acknowledgments
+## Acknowledgments
 
 Built with modern web technologies and best practices for small business management.
 
@@ -378,57 +348,4 @@ Built with modern web technologies and best practices for small business managem
 
 **Version**: 3.0.0  
 **Last Updated**: May 2, 2026  
-**Status**: Production Ready ✅ | Database: Clean & Ready for New Users 🎉
-
-### ✅ System Status
-- ✅ Database cleaned and ready for production
-- ✅ Only admin account exists (admin@biztrack.com)
-- ✅ All test data removed
-- ✅ All servers running and tested
-- ✅ All bugs fixed and verified
-
-### 📚 Documentation
-- **GETTING_STARTED.md** - Complete user onboarding guide
-- **USER_DASHBOARD_GUIDE.md** - Dashboard features and testing
-- **ORDERS_FIX_SUMMARY.md** - Recent fixes and improvements
-- **SECURITY.md** - Security guidelines
-
-### ✅ Completed Features
-- ✅ Real Authentication (JWT + bcrypt)
-- ✅ SQLite Database (PostgreSQL ready)
-- ✅ **Separate Admin Panel** (completely isolated from user app)
-- ✅ **Role-Based Access Control** (user/admin roles)
-- ✅ Multi-Platform Orders (WhatsApp, Facebook, Instagram, TikTok, etc.)
-- ✅ Digital Receipt Delivery
-- ✅ PWA Support
-- ✅ Dark/Light Mode
-- ✅ Full CRUD Operations
-- ✅ **Production Deployment Ready**
-- ✅ **Comprehensive Documentation**
-- ✅ **Clean Database for New Users**
-
-### 🏗️ Architecture
-- **User Application** (Port 3000) - Business management for users
-- **Admin Application** (Port 3001) - Platform administration
-- **Backend API** (Port 5001) - Shared API with role-based access
-- **Complete Data Separation** - No mixing between user and admin data
-
-### 🎯 Quick Start for New Users
-1. Go to http://localhost:3000
-2. Click "Create Account"
-3. Register your business
-4. Start tracking sales, inventory, and orders!
-
-See **GETTING_STARTED.md** for complete instructions.
-
-### 🔐 Admin Access
-- **URL**: http://localhost:3001
-- **Email**: admin@biztrack.com
-- **Password**: admin123
-- ⚠️ **Change password immediately after first login!**
-
-### 🚀 Ready to Deploy
-All applications are built, tested, and ready for external server deployment.  
-**Start with**: `GETTING_STARTED.md`
-
-**Happy Business Management!** 💼🛡️
+**Status**: Production Ready

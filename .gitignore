@@ -2,6 +2,9 @@
 node_modules/
 package-lock.json
 
+# Admin Panel (SENSITIVE - DO NOT EXPOSE)
+admin-panel/
+
 # Environment variables (SENSITIVE - DO NOT COMMIT)
 .env
 .env.local
