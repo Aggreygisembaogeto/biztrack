@@ -18,6 +18,7 @@ import Reports from './pages/Reports';
 import Orders from './pages/Orders';
 import AdminPanel from './pages/AdminPanel';
 import DailyTracker from './pages/DailyTracker';
+import EnvTest from './pages/EnvTest';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -37,6 +38,7 @@ function AppRoutes() {
     <div className="min-h-screen bg-gray-900">
       <NetworkStatus />
       <Routes>
+        <Route path="/env-test" element={<EnvTest />} />
         <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
         <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} />
         <Route path="/auth/callback" element={<OAuthCallback />} />
