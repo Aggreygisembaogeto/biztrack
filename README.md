@@ -67,7 +67,7 @@ A modern, full-featured business management system for small to medium businesse
 - Node.js (v14 or higher)
 - npm or yarn
 
-### Setup
+### Quick Setup (Unified Mode)
 
 1. **Clone the repository**
    ```bash
@@ -75,38 +75,39 @@ A modern, full-featured business management system for small to medium businesse
    cd biztrack
    ```
 
-2. **Install dependencies**
+2. **Install all dependencies**
    ```bash
-   # Install backend dependencies
-   cd backend
-   npm install
-
-   # Install frontend dependencies
-   cd ../frontend
-   npm install
+   npm run install-all
    ```
 
 3. **Configure environment**
    ```bash
-   # In backend directory
    cp .env.example .env
-   # Edit .env with your settings
+   # Edit .env with your settings (minimum: JWT_SECRET)
    ```
 
-4. **Start the application**
+4. **Build and start**
    ```bash
-   # Terminal 1 - Start backend
-   cd backend
+   npm run build
    npm start
-
-   # Terminal 2 - Start frontend
-   cd frontend
-   npm run dev
    ```
 
 5. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5001
+   - Application: http://localhost:5001
+   - API: http://localhost:5001/api
+
+### Development Mode
+
+```bash
+# Terminal 1 - Backend with auto-reload
+npm run dev
+
+# Terminal 2 - Frontend with hot reload
+npm run dev:frontend
+```
+
+- Frontend dev server: http://localhost:3000
+- Backend API: http://localhost:5001
 
 ## Quick Start
 
@@ -296,38 +297,63 @@ This project is licensed under the MIT License.
 
 ## Production Deployment
 
-### Quick Deployment
+### Quick Deployment to Vercel
+
+1. **Install Vercel CLI**
+   ```bash
+   npm install -g vercel
+   ```
+
+2. **Deploy**
+   ```bash
+   vercel
+   ```
+
+3. **Set environment variables in Vercel dashboard**
+   - JWT_SECRET (generate strong random string)
+   - NODE_ENV=production
+   - DATABASE_PATH=./backend/data/biztrack.db
+
+### Deploy to Railway.app
+
+1. Create account at https://railway.app
+2. Create new project from GitHub
+3. Connect your repository
+4. Set environment variables
+5. Railway auto-deploys on push
+
+### Deploy to Traditional Server
 
 ```bash
-# 1. Update environment variables with your production URLs
-# frontend/.env.production: VITE_API_URL=https://api.yourdomain.com
-
-# 2. Build frontend
-cd frontend
+# On your server
+git clone https://github.com/Aggreygisembaogeto/biztrack.git
+cd biztrack
+npm install
 npm run build
+cp .env.example .env
+# Edit .env with production values
 
-# 3. Upload to server
-rsync -avz dist/ user@server:/var/www/app/
-rsync -avz backend/ user@server:/var/www/api/
-
-# 4. On server - Setup backend
-cd /var/www/api
-npm install --production
-cp .env.example .env  # Edit with your values
+# Install PM2
 npm install -g pm2
-pm2 start server.js --name biztrack-api
+pm2 start server-unified.js --name biztrack
 pm2 save
+pm2 startup
 
-# 5. Configure Nginx and SSL (Let's Encrypt)
+# Configure Nginx and SSL
 ```
 
+See **UNIFIED_SETUP.md** for detailed deployment instructions.
+
 ### Production URLs
-- User App: `https://app.yourdomain.com`
-- Backend API: `https://api.yourdomain.com`
+- Application: `https://yourdomain.com`
+- API: `https://yourdomain.com/api`
 
 ### Security Checklist
 - Copy `.env.example` to `.env` and update all values
-- Change JWT_SECRET to a strong random string (minimum 32 characters)
+- Generate strong JWT_SECRET (32+ characters):
+  ```bash
+  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  ```
 - Use strong passwords for all accounts
 - Enable HTTPS/SSL with valid certificates
 - Configure firewall to allow only necessary ports
