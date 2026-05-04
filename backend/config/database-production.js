@@ -35,6 +35,9 @@ const initDatabase = () => {
           business_name TEXT NOT NULL,
           phone TEXT,
           address TEXT,
+          role TEXT DEFAULT 'user',
+          oauth_provider TEXT,
+          oauth_id TEXT,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )

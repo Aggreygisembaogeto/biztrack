@@ -38,8 +38,14 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Initialize Passport
-app.use(passport.initialize());
+// Initialize Passport (with error handling)
+try {
+  app.use(passport.initialize());
+  console.log('✓ Passport initialized');
+} catch (error) {
+  console.error('⚠ Passport initialization failed:', error.message);
+  console.log('⚠ OAuth features will be disabled');
+}
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -171,11 +177,12 @@ const PORT = process.env.PORT || 5001;
 
 initDatabase()
   .then(() => {
-    server.listen(PORT, () => {
+    const HOST = '0.0.0.0'; // Bind to all interfaces for Railway
+    server.listen(PORT, HOST, () => {
       console.log('═══════════════════════════════════════════════════');
       console.log('  🚀 BizTrack API Server');
       console.log('═══════════════════════════════════════════════════');
-      console.log(`  ✓ Server running on port ${PORT}`);
+      console.log(`  ✓ Server running on ${HOST}:${PORT}`);
       console.log(`  ✓ Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`  ✓ Database: SQLite (initialized)`);
       console.log(`  ✓ API URL: http://localhost:${PORT}/api`);
