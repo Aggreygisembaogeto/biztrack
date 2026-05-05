@@ -27,7 +27,7 @@ const getAccessToken = async () => {
 // Initiate STK Push (Lipa Na M-PESA Online)
 exports.initiatePayment = async (req, res) => {
   try {
-    const { amount, phone_number, description = 'Payment' } = req.body;
+    const { amount, phone_number, description = 'Payment', customer_name } = req.body;
     const userId = req.user.id;
 
     // Validation
@@ -38,30 +38,63 @@ exports.initiatePayment = async (req, res) => {
       });
     }
 
+    // Validate amount
+    if (parseFloat(amount) <= 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Amount must be greater than 0' 
+      });
+    }
+
+    // Validate phone number format
+    const phoneRegex = /^254\d{9}$/;
+    if (!phoneRegex.test(phone_number)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid phone number format. Use 254XXXXXXXXX' 
+      });
+    }
+
     // Check if M-PESA is configured
     if (!process.env.MPESA_CONSUMER_KEY || !process.env.MPESA_CONSUMER_SECRET) {
+      console.log('M-PESA not configured, using mock payment');
+      
       // Mock payment for development
+      const mockReceipt = `MOCK${Date.now()}`;
       const result = await pool.query(
-        `INSERT INTO transactions (user_id, amount, type, status, description, customer_phone, mpesa_receipt) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7) 
+        `INSERT INTO transactions (user_id, amount, type, status, description, customer_phone, mpesa_receipt, payment_method) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
          RETURNING *`,
-        [userId, amount, 'payment', 'completed', description, phone_number, `MOCK${Date.now()}`]
+        [userId, amount, 'payment', 'completed', description, phone_number, mockReceipt, 'M-Pesa']
       );
 
       const transaction = result.rows[0];
 
-      // Emit socket event
-      const io = req.app.get('io');
-      io.to(`user_${userId}`).emit('new_transaction', transaction);
+      // Emit socket event if available
+      try {
+        const io = req.app.get('io');
+        if (io) {
+          io.to(`user_${userId}`).emit('new_transaction', transaction);
+        }
+      } catch (socketError) {
+        console.log('Socket not available:', socketError.message);
+      }
 
       return res.json({
         success: true,
-        message: 'Mock payment processed successfully (M-PESA not configured)',
-        data: transaction
+        message: 'Mock payment processed successfully (M-Pesa not configured)',
+        data: {
+          transaction,
+          mpesa_response: {
+            CheckoutRequestID: mockReceipt,
+            ResponseDescription: 'Mock payment - M-Pesa credentials not configured'
+          }
+        }
       });
     }
 
     // Real M-PESA integration
+    console.log('Initiating real M-PESA payment...');
     const accessToken = await getAccessToken();
     const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, -3);
     const password = Buffer.from(
@@ -75,12 +108,12 @@ exports.initiatePayment = async (req, res) => {
         Password: password,
         Timestamp: timestamp,
         TransactionType: 'CustomerPayBillOnline',
-        Amount: amount,
+        Amount: Math.round(parseFloat(amount)),
         PartyA: phone_number,
         PartyB: process.env.MPESA_SHORTCODE,
         PhoneNumber: phone_number,
-        CallBackURL: process.env.MPESA_CALLBACK_URL,
-        AccountReference: `Order${Date.now()}`,
+        CallBackURL: process.env.MPESA_CALLBACK_URL || 'https://yourdomain.com/api/mpesa/callback',
+        AccountReference: customer_name || `Order${Date.now()}`,
         TransactionDesc: description
       },
       {
@@ -90,27 +123,37 @@ exports.initiatePayment = async (req, res) => {
       }
     );
 
+    console.log('M-PESA STK Push Response:', stkPushResponse.data);
+
     // Create pending transaction
     const result = await pool.query(
-      `INSERT INTO transactions (user_id, amount, type, status, description, customer_phone) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
+      `INSERT INTO transactions (user_id, amount, type, status, description, customer_phone, payment_method) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
        RETURNING *`,
-      [userId, amount, 'payment', 'pending', description, phone_number]
+      [userId, amount, 'payment', 'pending', description, phone_number, 'M-Pesa']
     );
 
     res.json({
       success: true,
-      message: 'Payment initiated. Please check your phone.',
+      message: 'STK Push sent successfully. Please check your phone.',
       data: {
         transaction: result.rows[0],
         mpesa_response: stkPushResponse.data
       }
     });
   } catch (error) {
-    console.error('M-PESA payment error:', error);
+    console.error('M-PESA payment error:', error.response?.data || error.message);
+    
+    // Provide more specific error messages
+    let errorMessage = 'Error initiating payment';
+    if (error.response?.data) {
+      errorMessage = error.response.data.errorMessage || error.response.data.ResponseDescription || errorMessage;
+    }
+    
     res.status(500).json({ 
       success: false, 
-      message: 'Error initiating payment' 
+      message: errorMessage,
+      details: error.response?.data || error.message
     });
   }
 };

@@ -71,11 +71,12 @@ const MpesaPayment = ({ onClose, onSuccess }) => {
       const phone = formatPhoneNumber(formData.phoneNumber);
       
       // Call backend API
-      const response = await fetch('http://localhost:5000/api/mpesa/initiate', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const response = await fetch(`${API_URL}/api/mpesa/initiate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('biztrack_token')}`
         },
         body: JSON.stringify({
           amount: parseFloat(formData.amount),
