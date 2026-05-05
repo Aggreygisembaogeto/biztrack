@@ -62,6 +62,8 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/sales', require('./routes/sales'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/super-admin', require('./routes/super-admin')); // Super admin routes
+app.use('/api/mpesa', require('./routes/mpesa'));
 
 // Health check
 app.get('/api/health', (req, res) => {
