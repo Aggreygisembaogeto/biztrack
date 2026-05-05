@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { SettingsStorage } from '../utils/storage';
+import ThemeToggle from './ThemeToggle';
 import {
   FiHome, FiBarChart2, FiSettings, FiLogOut,
   FiPackage, FiDollarSign, FiFileText,
@@ -69,7 +70,7 @@ const Sidebar = ({ user }) => {
   const NavContent = ({ isMobile = false }) => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className={`p-5 border-b border-gray-700 flex items-center justify-between ${isMobile ? 'bg-gray-900' : ''}`}>
+      <div className={`p-5 border-b border-gray-700 dark:border-gray-700 flex items-center justify-between ${isMobile ? 'bg-gray-900 dark:bg-gray-900' : ''}`}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0 overflow-hidden shadow-lg">
             {businessLogo ? (
@@ -82,14 +83,14 @@ const Sidebar = ({ user }) => {
             <h2 className="text-xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
               BizDash
             </h2>
-            <p className="text-xs text-gray-400 mt-0.5">Nairobi, Kenya</p>
+            <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">Nairobi, Kenya</p>
           </div>
         </div>
         {/* Close button on mobile */}
         {isMobile && (
           <button
             onClick={() => setMobileOpen(false)}
-            className="text-gray-400 hover:text-white p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            className="text-gray-400 hover:text-white dark:hover:text-white p-2 hover:bg-gray-700 dark:hover:bg-gray-700 rounded-lg transition-colors"
             aria-label="Close menu"
           >
             <FiX size={24} />
@@ -98,8 +99,8 @@ const Sidebar = ({ user }) => {
       </div>
 
       {/* User Info */}
-      <div className="p-4 border-b border-gray-700 bg-gray-900/50">
-        <div className="flex items-center gap-3">
+      <div className="p-4 border-b border-gray-700 dark:border-gray-700 bg-gray-900/50 dark:bg-gray-900/50">
+        <div className="flex items-center gap-3 mb-3">
           <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 overflow-hidden ring-2 ring-orange-500/20">
             {businessLogo ? (
               <img src={businessLogo} alt="Logo" className="w-full h-full object-cover" />
@@ -108,14 +109,19 @@ const Sidebar = ({ user }) => {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-white font-semibold text-sm truncate">{user?.business_name || 'Business'}</p>
-            <p className="text-gray-400 text-xs truncate">{user?.email || ''}</p>
+            <p className="text-white dark:text-white font-semibold text-sm truncate">{user?.business_name || 'Business'}</p>
+            <p className="text-gray-400 dark:text-gray-400 text-xs truncate">{user?.email || ''}</p>
             {isAdmin && (
               <span className="inline-block mt-1 px-2 py-0.5 bg-red-500/10 text-red-400 rounded text-xs font-medium">
                 Admin
               </span>
             )}
           </div>
+        </div>
+        {/* Theme Toggle */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-400 dark:text-gray-400">Theme</span>
+          <ThemeToggle />
         </div>
       </div>
 
@@ -131,7 +137,7 @@ const Sidebar = ({ user }) => {
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm group ${
                     isActive
                       ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30'
-                      : 'text-gray-400 hover:bg-gray-700/50 hover:text-white active:scale-95'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white active:scale-95'
                   }`}
                 >
                   <span className={`flex-shrink-0 ${isActive ? 'scale-110' : 'group-hover:scale-110'} transition-transform`}>
@@ -154,7 +160,7 @@ const Sidebar = ({ user }) => {
 
         {/* Admin Panel Link - ONLY for users with role='admin' */}
         {isAdmin && (
-          <div className="mt-4 pt-4 border-t border-gray-700">
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={() => handleNav('/admin')}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 active:scale-95"
@@ -170,7 +176,7 @@ const Sidebar = ({ user }) => {
       </nav>
 
       {/* Logout */}
-      <div className="p-3 border-t border-gray-700 bg-gray-900/50">
+      <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-900/20 transition-all text-sm font-medium active:scale-95"
@@ -185,21 +191,21 @@ const Sidebar = ({ user }) => {
   return (
     <>
       {/* Mobile top bar - Enhanced */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-gray-800/95 backdrop-blur-lg border-b border-gray-700 shadow-lg">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-lg">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="text-gray-400 hover:text-white p-2 hover:bg-gray-700 rounded-lg transition-colors active:scale-95"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors active:scale-95"
               aria-label="Open menu"
             >
               <FiMenu size={24} />
             </button>
             <div>
-              <h2 className="text-base font-bold text-white">
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">
                 {getCurrentPageTitle()}
               </h2>
-              <p className="text-xs text-gray-400">{user?.business_name || 'BizDash'}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">{user?.business_name || 'BizDash'}</p>
             </div>
           </div>
           <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden shadow-lg">
@@ -223,7 +229,7 @@ const Sidebar = ({ user }) => {
 
       {/* Mobile drawer - Enhanced */}
       <div 
-        className={`md:hidden fixed top-0 left-0 h-full w-72 bg-gray-800 border-r border-gray-700 z-50 transform transition-transform duration-300 ease-out shadow-2xl ${
+        className={`md:hidden fixed top-0 left-0 h-full w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-50 transform transition-transform duration-300 ease-out shadow-2xl ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -231,7 +237,7 @@ const Sidebar = ({ user }) => {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden md:flex w-64 bg-gray-800 border-r border-gray-700 flex-col flex-shrink-0">
+      <div className="hidden md:flex w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-col flex-shrink-0">
         <NavContent isMobile={false} />
       </div>
     </>

@@ -16,6 +16,7 @@ const allowedOrigins = [
   process.env.ADMIN_URL || 'http://localhost:3001',
   'http://localhost:3000',
   'http://localhost:3001',
+  'http://localhost:3002', // Alternative frontend port
   'https://biztrack-dusky.vercel.app' // Hardcoded Vercel domain
 ];
 

@@ -25,7 +25,6 @@ app.set('io', io);
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/transactions', require('./routes/transactions'));
-app.use('/api/ai', require('./routes/ai'));
 app.use('/api/mpesa', require('./routes/mpesa'));
 
 // Health check

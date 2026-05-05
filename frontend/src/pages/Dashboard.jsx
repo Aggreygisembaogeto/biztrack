@@ -4,8 +4,7 @@ import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import StatsCard from '../components/StatsCard';
 import ActivityFeed from '../components/ActivityFeed';
-import AIAssistant from '../components/AIAssistant';
-import AIMarketAdvisor from '../components/AIMarketAdvisor';
+import WelcomeTour from '../components/WelcomeTour';
 import TransactionModal from '../components/TransactionModal';
 import QuickActions from '../components/QuickActions';
 import QuickActionModal from '../components/QuickActionModal';
@@ -273,6 +272,9 @@ const Dashboard = () => {
     <div className="flex min-h-screen bg-gray-900">
       <Sidebar user={user} />
 
+      {/* Welcome Tour */}
+      <WelcomeTour />
+
       <div className="flex-1 pt-16 md:pt-0 p-4 md:p-8 overflow-auto">
 
         {/* Loading State */}
@@ -393,22 +395,12 @@ const Dashboard = () => {
               <SalesBreakdown sales={salesItems} />
             </div>
 
-            {/* AI Market Advisor */}
+            {/* Activity Feed */}
             <div className="mb-6">
-              <AIMarketAdvisor />
-            </div>
-
-            {/* Activity Feed + AI Assistant */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <ActivityFeed
-                  transactions={summary.recent_transactions}
-                  onAddTransaction={() => setShowTransactionModal(true)}
-                />
-              </div>
-              <div className="lg:col-span-1">
-                <AIAssistant />
-              </div>
+              <ActivityFeed
+                transactions={summary.recent_transactions}
+                onAddTransaction={() => setShowTransactionModal(true)}
+              />
             </div>
           </>
         )}
